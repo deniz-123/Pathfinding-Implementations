@@ -1,9 +1,9 @@
 """
 @Author Deniz Berkant Demirörs
-@Date 24/07/2020
-@Version 1.0.0
+@Date 30/07/2020
+@Version 1.0.1
 Using A* and Dijkstra's algorithm to find the shortest path between two distances and barriers
-Creating a random maze using Recursive Backtrackerd algorithm and solving it with A* and Dijkstra
+Creating a random maze using Recursive Backtracker algorithm and solving it with A* and Dijkstra
 """
 
 import pygame
@@ -212,13 +212,12 @@ def maze(grid, draw):
         elif stack:
             current = stack[len(stack) - 1]
             stack.remove(current)
-        clock.tick(500)
+        #clock.tick(5)
         draw()
 
 
 def dijsktra(start, end, draw):
     open_set = [start]
-    count = 0
     path = []
     start.g = 0
     start.h = heuristic(start, end)
@@ -231,8 +230,17 @@ def dijsktra(start, end, draw):
 
         if not open_set:
             break
-        current = open_set[0]
-        open_set.remove(current)
+        if len(open_set) < 2:
+            current = open_set[0]
+            open_set.remove(current)
+        else:
+            current = open_set[0]
+            open_set.remove(current)
+            tmp = open_set[0]
+            if current.g > tmp.g:
+                open_set.append(current)
+                current = open_set[0]
+                open_set.remove(current)
 
         if current == end:
             temp = current
@@ -250,17 +258,18 @@ def dijsktra(start, end, draw):
             if temp_g < neighbor.g:
                 neighbor.previous = current
                 if neighbor.color == Yellow:
-                    neighbor.g = temp_g + 5
+                    neighbor.g = temp_g + 10
                 else:
                     neighbor.g = temp_g
                 if neighbor not in open_set:
-                    count += 1
                     open_set.append(neighbor)
-                    if neighbor != end or neighbor.color != Yellow:
+                    if neighbor != end and neighbor.color != Yellow and neighbor.color != Pink:
                         neighbor.set_color(Green)
+                    elif neighbor.color == Yellow:
+                        neighbor.set_color(Pink)
 
         draw()
-        if current != end and current != start and current.color != Yellow:
+        if current != end and current != start and current.color != Pink:
             current.set_color(Red)
 
 
@@ -379,6 +388,7 @@ def main():
                     boolean_a = True
                     boolean_d = True
                     boolean_m = True
+                    boolean_r = True
         pygame.display.update()
 
 
