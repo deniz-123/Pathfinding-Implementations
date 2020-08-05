@@ -1,9 +1,19 @@
 """
 @Author Deniz Berkant Demirörs
-@Date 30/07/2020
-@Version 1.0.1
-Using A* and Dijkstra's algorithm to find the shortest path between two distances and barriers
+@Date 05/08/2020
+@Version 1.0.2
+Using A* and Dijkstra's algorithm to find the shortest path between two or more spots and barriers
 Creating a random maze using Recursive Backtracker algorithm and solving it with A* and Dijkstra
+@Keys
+Clear = c
+Maze = m
+Random Obstacles = r
+A* Algorithm = a
+Dijkstra's Algorithm = d
+Start = Mouse Left Click
+End Spots = Mouse Right Click(can be multiple)
+Obstacles = Middle button of mouse
+Weighted Spots = After putting start node use Mouse Left Click to put
 """
 
 import pygame
@@ -14,6 +24,7 @@ from queue import *
 
 # colors
 Black = 0, 0, 0
+Grown = 105, 105, 10
 Green = 0, 255, 0
 Grey = 128, 128, 128
 Purple = 128, 0, 128
@@ -181,6 +192,7 @@ def maze(grid, draw):
             else:
                 grid[i][j].visited_cell = False
                 cell.append(grid[i][j])
+            draw()
     for row in grid:
         for node in row:
             node.update_maze_neighbors(grid)
@@ -199,28 +211,44 @@ def maze(grid, draw):
             if len(maze_neighbors_tmp) > 1:
                 i = random.randint(0, len(current.get_maze_neighbors()) - 1)
                 chosen = current.get_maze_neighbors()[i]
+                chosen.previous = current
+                chosen.set_color(Pink)
+                current.set_color(White)
                 stack.append(current)
             else:
                 chosen = current.get_maze_neighbors()[0]
+                chosen.set_color(Pink)
+                current.set_color(White)
                 stack.append(current)
             for neighbor in current.get_neighbors():
                 if neighbor in chosen.get_neighbors():
                     neighbor.set_color(White)
                     break
+
             current = chosen
             current.visited_cell = True
         elif stack:
+            current.set_color(White)
             current = stack[len(stack) - 1]
+            if stack:
+                current.set_color(Pink)
             stack.remove(current)
-        #clock.tick(5)
+        if not stack:
+            current.set_color(White)
+        clock.tick(20)
         draw()
+    for row in grid:
+        for node in row:
+            if node.color == Pink:
+                node.set_color(White)
+    draw()
 
 
-def dijsktra(start, end, draw):
+def dijsktra(start, end, draw, path_1, grid):
     open_set = [start]
-    path = []
+    path = path_1
     start.g = 0
-    start.h = heuristic(start, end)
+    start.h = heuristic(start, end[0])
     algorithm = True
 
     while algorithm:
@@ -242,16 +270,6 @@ def dijsktra(start, end, draw):
                 current = open_set[0]
                 open_set.remove(current)
 
-        if current == end:
-            temp = current
-            path.append(current)
-            while temp.previous:
-                path.append(temp)
-                temp = temp.previous
-            for i in range(2, len(path)):
-                path[i].set_color(Purple)
-            algorithm = False
-
         for neighbor in current.get_neighbors():
             temp_g = current.g + 1
 
@@ -263,24 +281,55 @@ def dijsktra(start, end, draw):
                     neighbor.g = temp_g
                 if neighbor not in open_set:
                     open_set.append(neighbor)
-                    if neighbor != end and neighbor.color != Yellow and neighbor.color != Pink:
+                    if neighbor.color != Orange and neighbor.color != Yellow and neighbor.color != Turquoise:
                         neighbor.set_color(Green)
                     elif neighbor.color == Yellow:
                         neighbor.set_color(Pink)
 
-        draw()
-        if current != end and current != start and current.color != Pink:
+        if current.color != Orange and current.color != Turquoise and current.color != Pink:
             current.set_color(Red)
 
+        if current == end[0] and len(end) > 1:
+            start = end[0]
+            end.pop(0)
+            temp = current
+            path.append(current)
+            while temp.previous:
+                path.append(temp)
+                temp = temp.previous
+            for row in grid:
+                for node in row:
+                    node.g = math.inf
+                    node.previous = None
+            dijsktra(start, end, draw, path, grid)
+            break
+        elif current == end[0] and len(end) == 1:
+            end.pop(0)
+            temp = current
+            temp_path = [current]
+            while temp.previous:
+                temp_path.append(temp)
+                temp = temp.previous
+            path.extend(temp_path)
+            for i in range(2, len(path)):
+                if path[i].color != Orange and path[i].color != Turquoise:
+                    path[i].set_color(Purple)
+                elif path[i].color == Turquoise:
+                    path[i].set_color(Grown)
+                # clock.tick(10)
+                draw()
+            algorithm = False
+        draw()
 
-def a_star(start, end, draw):
+
+def a_star(start, end, draw, path_1, grid):
     open_set = [start]
     count = 0
     open_set_prio = PriorityQueue()
     open_set_prio.put((0, count, start))
-    path = []
+    path = path_1
     start.g = 0
-    start.h = heuristic(start, end)
+    start.h = heuristic(start, end[0])
     algorithm = True
 
     while algorithm:
@@ -293,23 +342,13 @@ def a_star(start, end, draw):
         current = open_set_prio.get()[2]
         open_set.remove(current)
 
-        if current == end:
-            temp = current
-            path.append(current)
-            while temp.previous:
-                path.append(temp)
-                temp = temp.previous
-            for i in range(2, len(path)):
-                path[i].set_color(Purple)
-            algorithm = False
-
         for neighbor in current.get_neighbors():
             temp_g = current.g + 1
 
             if temp_g < neighbor.g:
                 neighbor.previous = current
                 neighbor.g = temp_g
-                neighbor.h = heuristic(neighbor, end)
+                neighbor.h = heuristic(neighbor, end[0])
                 if neighbor.color == Yellow:
                     neighbor.f = neighbor.g + neighbor.h + 10
                 else:
@@ -318,14 +357,46 @@ def a_star(start, end, draw):
                     count += 1
                     open_set_prio.put((neighbor.f, count, neighbor))
                     open_set.append(neighbor)
-                    if neighbor != end and neighbor.color != Yellow:
+                    if neighbor.color != Orange and neighbor.color != Yellow and neighbor.color != Turquoise:
                         neighbor.set_color(Green)
                     elif neighbor.color == Yellow:
                         neighbor.set_color(Pink)
 
-        draw()
-        if current != end and current != start and current.color != Pink:
+        if current.color != Orange and current.color != Turquoise and current.color != Pink:
             current.set_color(Red)
+
+        if current == end[0] and len(end) > 1:
+            start = end[0]
+            end.pop(0)
+            temp = current
+            path.append(current)
+            while temp.previous:
+                path.append(temp)
+                temp = temp.previous
+            for row in grid:
+                for node in row:
+                    node.g = math.inf
+                    node.h = math.inf
+                    node.previous = None
+            a_star(start, end, draw, path, grid)
+            break
+        elif current == end[0] and len(end) == 1:
+            end.pop(0)
+            temp = current
+            temp_path = [current]
+            while temp.previous:
+                temp_path.append(temp)
+                temp = temp.previous
+            path.extend(temp_path)
+            for i in range(2, len(path)):
+                if path[i].color != Orange and path[i].color != Turquoise:
+                    path[i].set_color(Purple)
+                elif path[i].color == Turquoise:
+                    path[i].set_color(Grown)
+                #clock.tick(10)
+                draw()
+            algorithm = False
+        draw()
 
 
 def main():
@@ -335,8 +406,9 @@ def main():
     boolean_m = True
     boolean_r = True
     start = None
-    end = None
+    end = []
     run = True
+    path_1 = []
 
     grid = make_grid(round(N_WIDTH))
     while run:
@@ -362,19 +434,20 @@ def main():
             if boolean_d and pygame.mouse.get_pressed()[2]:
                 if grid[int(m_x_i)][int(m_x_j)].color == White:
                     grid[int(m_x_i)][int(m_x_j)].set_color(Orange)
-                    end = grid[int(m_x_i)][int(m_x_j)]
-                    boolean_d = False
+                    end.append(grid[int(m_x_i)][int(m_x_j)])
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a and start and end:
                     for row in grid:
                         for node in row:
                             node.update_neighbors(grid)
-                    a_star(start, end, lambda: draw(screen, grid, N_WIDTH))
+                    a_star(start, end, lambda: draw(screen, grid, N_WIDTH), path_1, grid)
+                    boolean_d = False
                 if event.key == pygame.K_d and start and end:
                     for row in grid:
                         for node in row:
                             node.update_neighbors(grid)
-                    dijsktra(start, end, lambda: draw(screen, grid, N_WIDTH))
+                    dijsktra(start, end, lambda: draw(screen, grid, N_WIDTH), path_1, grid)
+                    boolean_d = False
                 if event.key == pygame.K_m and boolean_m:
                     maze(grid, lambda: draw(screen, grid, N_WIDTH))
                     boolean_m = False
@@ -383,17 +456,14 @@ def main():
                     boolean_r = False
                 if event.key == pygame.K_c:
                     start = None
-                    end = None
+                    end = []
                     grid = make_grid(round(N_WIDTH))
                     boolean_a = True
                     boolean_d = True
                     boolean_m = True
                     boolean_r = True
+                    path_1 = []
         pygame.display.update()
 
-
-# for a* search press a
-# for dijkstra first search press d
-# for maze press m
 
 main()
