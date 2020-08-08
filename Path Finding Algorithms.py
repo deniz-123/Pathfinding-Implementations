@@ -582,6 +582,7 @@ def main():
                     boolean_d = True
                     boolean_m = True
                     boolean_r = True
+                    boolean_p = True
                     path_1 = []
         pygame.display.update()
 
