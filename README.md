@@ -12,6 +12,11 @@ Published first time the implementations of some algorithms and their visualizat
 Solved some bugs for while finding shortest path in dijkstra's algorithm when there are weighted nodes
 
 # Date : 8/5/2020
-# Version : 1.0.1
+# Version : 1.0.2
 Added multiple end nodes so that algorithm can find the best paths between multiple spots.
 Now while creating the maze, current node is marked as pink so user can see clearly what is happening
+
+# Date : 8/8/2020
+# Version : 1.0.3
+Added Prim's algorithm. 
+Now user can create maze with Prim's by clickin p button.
