@@ -1,7 +1,7 @@
 """
 @Author Deniz Berkant Demirörs
 @Date 08/08/2020
-@Version 1.0.3
+@Version 1.0.4
 Using A* and Dijkstra's algorithm to find the shortest path between two or more spots and barriers
 Creating a random maze using Recursive Backtracker and Prim's algorithms and solving them with A* and Dijkstra
 @Keys
@@ -39,9 +39,9 @@ White = 255, 255, 255
 Yellow = 255, 255, 0
 
 # init pygame
-WIDTH = 1215
-HEIGHT = 885
-N_WIDTH = 15
+WIDTH = 1180
+HEIGHT = 900
+N_WIDTH = 20
 T_ROWS = WIDTH / N_WIDTH
 T_COLS = HEIGHT / N_WIDTH
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -50,7 +50,6 @@ clock = pygame.time.Clock()
 
 # var
 grid = None
-
 
 class Node():
     def __init__(self, row, col, width):
@@ -71,6 +70,9 @@ class Node():
         self.previous = None
         self.maze_visited = False
         self.visited_cell = True
+
+    def __str__(self):
+        return "I am {} - {}".format(self.col, self.row)
 
     def get_neighbors(self):
         return self.neighbors
@@ -118,7 +120,7 @@ class Node():
         if self.row < self.t_rows - 2 and not grid[self.row + 2][self.col].visited_cell:  # RIGHT
             self.maze_neighbors.append(grid[self.row + 2][self.col])
 
-        if self.row > 1 and not  grid[self.row -2][self.col].visited_cell:  # LEFT
+        if self.row > 1 and not grid[self.row - 2][self.col].visited_cell:  # LEFT
             self.maze_neighbors.append(grid[self.row - 2][self.col])
 
     def update_maze_neighbors_2(self, grid):
@@ -132,9 +134,8 @@ class Node():
         if self.row < self.t_rows - 2 and not grid[self.row + 2][self.col].visited_cell:  # RIGHT
             self.maze_neighbors_2.append(grid[self.row + 2][self.col])
 
-        if self.row > 1 and not grid[self.row -2][self.col].visited_cell:  # LEFT
+        if self.row > 1 and not grid[self.row - 2][self.col].visited_cell:  # LEFT
             self.maze_neighbors_2.append(grid[self.row - 2][self.col])
-
 
 
 def make_grid(gap):
@@ -216,18 +217,13 @@ def maze_prims(grid, draw):
             node.update_maze_neighbors_2(grid)
 
     i = random.randint(0, len(cell) - 1)
-    cell[i].set_color(White)
-    cell[i].visited_cell = True
-
-    for neighbor in cell[i].get_maze_neighbors_2():
-        neighbor.previous = cell[i]
-        maze.append(neighbor)
-        neighbor.set_color(Blue)
 
     c_tmp = Node(1, 1, 1)
     back = None
-    k = 0
+    maze.append(cell[i])
+
     while maze:
+        clock.tick(10000000)
         for row in grid:
             for node in row:
                 node.update_maze_neighbors_2(grid)
@@ -242,49 +238,50 @@ def maze_prims(grid, draw):
                 for neighbor in current.get_neighbors():
                     if neighbor in tmp_color.get_neighbors():
                         neighbor.set_color(White)
+                if tmp_color in maze:
+                    maze.remove(tmp_color)
+            draw()
         elif len(maze) == 1:
             j = 0
             current = maze[j]
 
+        if current in maze:
+            maze.remove(current)
         current.visited_cell = True
         random.shuffle(current.get_maze_neighbors_2())
 
-        for item in current.get_maze_neighbors_2():
-            if not item.visited_cell:
-                for neighbor in current.get_neighbors():
-                    if neighbor in item.get_neighbors():
-                        item.set_color(White)
-                        neighbor.set_color(White)
-                        item.visited_cell = True
-                        item.previous = current
-                        c_tmp = item
-                        back = True
-                        break
-            if back:
-                break
+        if current.get_maze_neighbors_2():
+            for item in current.get_maze_neighbors_2():
+                if not item.visited_cell:
+                    for neighbor in current.get_neighbors():
+                        if neighbor in item.get_neighbors():
+                            item.set_color(White)
+                            neighbor.set_color(White)
+                            item.visited_cell = True
+                            item.previous = current
+                            c_tmp = item
+                            back = True
+                            break
+                if back:
+                    break
 
-        for element in c_tmp.get_maze_neighbors_2():
-            if not element.visited_cell:
-                element.previous = c_tmp
-                maze.append(element)
-                element.set_color(Blue)
-                print(f"previous element {k} = {current}")
-        for element in current.get_maze_neighbors_2():
-            if not element.visited_cell:
-                element.previous = current
-                maze.append(element)
-                element.set_color(Blue)
-                print(f"previous element {k} = {current}")
+            for element in current.get_maze_neighbors_2():
+                if not element.visited_cell:
+                    element.previous = current
+                    maze.append(element)
+                    element.set_color(Blue)
+
+        if c_tmp.get_maze_neighbors_2():
+            for element in c_tmp.get_maze_neighbors_2():
+                if not element.visited_cell:
+                    element.previous = c_tmp
+                    if element.color != Blue:
+                        maze.append(element)
+                        element.set_color(Blue)
 
         back = False
-        k += 1
-        if current in maze:
-            maze.remove(current)
-
         draw()
-    for row in grid:
-        for node in row:
-            node.previous = None
+
 
 def maze_recursive(grid, draw):
     # variables
@@ -316,19 +313,22 @@ def maze_recursive(grid, draw):
 
     current = cell[0]
     current.visited_cell = True
+
     while cell:
+        clock.tick(20000000)
         for row in grid:
             for node in row:
                 node.update_maze_neighbors(grid)
 
         current = current
+        current.visited_cell = True
         maze_neighbors_tmp = current.get_maze_neighbors()
 
         if maze_neighbors_tmp:
             if len(maze_neighbors_tmp) > 1:
                 i = random.randint(0, len(current.get_maze_neighbors()) - 1)
                 chosen = current.get_maze_neighbors()[i]
-                #chosen.previous = current
+                # chosen.previous = current
                 chosen.set_color(Pink)
                 current.set_color(Yellow)
                 stack.append(current)
@@ -345,10 +345,9 @@ def maze_recursive(grid, draw):
                         neighbor.maze_visited = True
                     break
 
-            if current in cell:
-                cell.remove(current)
+            if chosen in cell:
+                cell.remove(chosen)
             current = chosen
-            current.visited_cell = True
 
         elif stack:
             current.set_color(White)
@@ -356,18 +355,14 @@ def maze_recursive(grid, draw):
                 if neighbor.maze_visited:
                     neighbor.set_color(White)
             current = stack[len(stack) - 1]
-            if stack:
-                current.set_color(Pink)
+            current.set_color(Pink)
             stack.remove(current)
+
         if not stack:
             current.set_color(White)
-        draw()
+            cell.remove(current)
 
-    for row in grid:
-        for node in row:
-            if node.color == Pink:
-                node.set_color(White)
-    draw()
+        draw()
 
 
 def dijsktra(start, end, draw, path_1, grid):
@@ -579,7 +574,7 @@ def main():
                     maze_recursive(grid, lambda: draw(screen, grid, N_WIDTH))
                     boolean_m = False
                 if event.key == pygame.K_p and boolean_p:
-                    maze_prims(grid, lambda: draw(screen, grid, N_WIDTH) )
+                    maze_prims(grid, lambda: draw(screen, grid, N_WIDTH))
                     boolean_p = False
                 if event.key == pygame.K_r and boolean_r:
                     rand_obstacle(grid, lambda: draw(screen, grid, N_WIDTH))
@@ -597,7 +592,7 @@ def main():
                                 grid[i][j].set_color(Black)
                             elif i == int(rows):
                                 grid[i][j].set_color(White)
-                        clock.tick(15)
+                        # clock.tick(15)
                         draw(screen, grid, N_WIDTH)
                     grid = make_grid(round(N_WIDTH))
                     boolean_a = True
