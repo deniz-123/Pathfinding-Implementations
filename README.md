@@ -20,3 +20,7 @@ Now while creating the maze, current node is marked as pink so user can see clea
 # Version : 1.0.3
 Added Prim's algorithm. 
 Now user can create maze with Prim's by clickin p button.
+
+# Date : 8/14/2020
+# Version : 1.0.4
+Optimization and bug fixes for maze creation algorithms
