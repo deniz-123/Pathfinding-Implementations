@@ -63,7 +63,6 @@ class Node():
         self.color = White
         self.neighbors = []
         self.maze_neighbors = []
-        self.maze_neighbors_2 = []
         self.width = width
         self.t_rows = WIDTH / width
         self.t_cols = HEIGHT / width
@@ -79,9 +78,6 @@ class Node():
 
     def get_maze_neighbors(self):
         return self.maze_neighbors
-
-    def get_maze_neighbors_2(self):
-        return self.maze_neighbors_2
 
     def set_color(self, color):
         self.color = color
@@ -122,20 +118,6 @@ class Node():
 
         if self.row > 1 and not grid[self.row - 2][self.col].visited_cell:  # LEFT
             self.maze_neighbors.append(grid[self.row - 2][self.col])
-
-    def update_maze_neighbors_2(self, grid):
-        self.maze_neighbors_2 = []
-        if self.col < self.t_cols - 2 and not grid[self.row][self.col + 2].visited_cell:  # DOWN
-            self.maze_neighbors_2.append(grid[self.row][self.col + 2])
-
-        if self.col > 1 and not grid[self.row][self.col - 2].visited_cell:  # UP
-            self.maze_neighbors_2.append(grid[self.row][self.col - 2])
-
-        if self.row < self.t_rows - 2 and not grid[self.row + 2][self.col].visited_cell:  # RIGHT
-            self.maze_neighbors_2.append(grid[self.row + 2][self.col])
-
-        if self.row > 1 and not grid[self.row - 2][self.col].visited_cell:  # LEFT
-            self.maze_neighbors_2.append(grid[self.row - 2][self.col])
 
 
 def make_grid(gap):
@@ -214,7 +196,7 @@ def maze_prims(grid, draw):
 
     for row in grid:
         for node in row:
-            node.update_maze_neighbors_2(grid)
+            node.update_maze_neighbors(grid)
 
     i = random.randint(0, len(cell) - 1)
 
@@ -226,7 +208,7 @@ def maze_prims(grid, draw):
         clock.tick(10000000)
         for row in grid:
             for node in row:
-                node.update_maze_neighbors_2(grid)
+                node.update_maze_neighbors(grid)
         back = back
 
         if len(maze) > 0:
@@ -248,10 +230,10 @@ def maze_prims(grid, draw):
         if current in maze:
             maze.remove(current)
         current.visited_cell = True
-        random.shuffle(current.get_maze_neighbors_2())
+        random.shuffle(current.get_maze_neighbors())
 
-        if current.get_maze_neighbors_2():
-            for item in current.get_maze_neighbors_2():
+        if current.get_maze_neighbors():
+            for item in current.get_maze_neighbors():
                 if not item.visited_cell:
                     for neighbor in current.get_neighbors():
                         if neighbor in item.get_neighbors():
@@ -265,14 +247,14 @@ def maze_prims(grid, draw):
                 if back:
                     break
 
-            for element in current.get_maze_neighbors_2():
+            for element in current.get_maze_neighbors():
                 if not element.visited_cell:
                     element.previous = current
                     maze.append(element)
                     element.set_color(Blue)
 
-        if c_tmp.get_maze_neighbors_2():
-            for element in c_tmp.get_maze_neighbors_2():
+        if c_tmp.get_maze_neighbors():
+            for element in c_tmp.get_maze_neighbors():
                 if not element.visited_cell:
                     element.previous = c_tmp
                     if element.color != Blue:
@@ -281,6 +263,9 @@ def maze_prims(grid, draw):
 
         back = False
         draw()
+    for row in grid:
+        for node in row:
+            node.previous = None
 
 
 def maze_recursive(grid, draw):
@@ -328,7 +313,6 @@ def maze_recursive(grid, draw):
             if len(maze_neighbors_tmp) > 1:
                 i = random.randint(0, len(current.get_maze_neighbors()) - 1)
                 chosen = current.get_maze_neighbors()[i]
-                # chosen.previous = current
                 chosen.set_color(Pink)
                 current.set_color(Yellow)
                 stack.append(current)
@@ -361,7 +345,6 @@ def maze_recursive(grid, draw):
         if not stack:
             current.set_color(White)
             cell.remove(current)
-
         draw()
 
 
