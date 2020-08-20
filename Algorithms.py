@@ -5,7 +5,7 @@ Using Node class visualizing bunch of algorithms
 import pygame
 import math
 import random
-import Node
+from Pygame_version import Node
 from queue import *
 
 # colors
@@ -28,8 +28,8 @@ HEIGHT = 885
 N_WIDTH = 15
 T_ROWS = WIDTH / N_WIDTH
 T_COLS = HEIGHT / N_WIDTH
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-screen.fill(Black)
+#screen = pygame.display.set_mode((WIDTH, HEIGHT))
+#screen.fill(Black)
 clock = pygame.time.Clock()
 
 # var
@@ -116,7 +116,6 @@ def maze_prims(grid, draw):
 
     i = random.randint(0, len(cell) - 1)
 
-    c_tmp = Node(1, 1, 1)
     back = None
     maze.append(cell[i])
 
@@ -261,6 +260,127 @@ def maze_recursive(grid, draw):
         if not stack:
             current.set_color(White)
             cell.remove(current)
+        draw()
+
+
+def dfs(start, end, draw, path_1, grid):
+    # update neighbors
+    for row in grid:
+        for node in row:
+            node.update_neighbors(grid)
+    # variables
+    stack = [start]
+    current = stack[0]
+    path = path_1
+
+    while stack:
+        current = current
+        stack.remove(current)
+        current.maze_visited = True
+        for neighbor in current.get_neighbors():
+            if not neighbor.maze_visited:
+                neighbor.previous = current
+                stack.append(neighbor)
+                if neighbor.color != Orange and neighbor.color != Turquoise:
+                    neighbor.set_color(Green)
+        if current.color != Orange and current.color != Turquoise:
+            current.set_color(Red)
+
+        if current == end[0] and len(end) > 1:
+            start = end[0]
+            end.pop(0)
+            temp = current
+            path.append(current)
+            while temp.previous:
+                path.append(temp)
+                temp = temp.previous
+            for row in grid:
+                for node in row:
+                    node.previous = None
+            dfs(start, end, draw, path_1, grid)
+            break
+        elif current == end[0] and len(end) == 1:
+            end.pop(0)
+            temp = current
+            temp_path = [current]
+            while temp.previous:
+                temp_path.append(temp)
+                temp = temp.previous
+            path.extend(temp_path)
+            for i in range(2, len(path)):
+                if path[i].color != Orange and path[i].color != Turquoise:
+                    path[i].set_color(Purple)
+                elif path[i].color == Turquoise:
+                    path[i].set_color(Grown)
+                draw()
+            break
+        if stack:
+            current = stack[len(stack) - 1]
+        draw()
+    draw()
+
+
+def bfs(start, end, draw, path_1, grid):
+    # update neighbors
+    for row in grid:
+        for node in row:
+            node.update_neighbors(grid)
+    # variables
+    open_set = [start]
+    path = path_1
+    algorithm = True
+
+    while algorithm:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+        if not open_set:
+            break
+        current = open_set[0]
+        current.maze_visited = True
+        open_set.remove(current)
+
+        for neighbor in current.get_neighbors():
+            if not neighbor.maze_visited:
+                neighbor.previous = current
+                if neighbor not in open_set:
+                    open_set.append(neighbor)
+                    if neighbor.color != Orange and neighbor.color != Turquoise:
+                        neighbor.set_color(Green)
+
+        if current.color != Orange and current.color != Turquoise and current.color != Pink:
+            current.set_color(Red)
+
+        if current == end[0] and len(end) > 1:
+            start = end[0]
+            end.pop(0)
+            temp = current
+            path.append(current)
+            while temp.previous:
+                path.append(temp)
+                temp = temp.previous
+            for row in grid:
+                for node in row:
+                    node.g = math.inf
+                    node.previous = None
+            bfs(start, end, draw, path, grid)
+            break
+        elif current == end[0] and len(end) == 1:
+            end.pop(0)
+            temp = current
+            temp_path = [current]
+            while temp.previous:
+                temp_path.append(temp)
+                temp = temp.previous
+            path.extend(temp_path)
+            for i in range(2, len(path)):
+                if path[i].color != Orange and path[i].color != Turquoise:
+                    path[i].set_color(Purple)
+                elif path[i].color == Turquoise:
+                    path[i].set_color(Grown)
+                draw()
+            algorithm = False
         draw()
 
 
