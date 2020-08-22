@@ -28,8 +28,8 @@ HEIGHT = 885
 N_WIDTH = 15
 T_ROWS = WIDTH / N_WIDTH
 T_COLS = HEIGHT / N_WIDTH
-#screen = pygame.display.set_mode((WIDTH, HEIGHT))
-#screen.fill(Black)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen.fill(Black)
 clock = pygame.time.Clock()
 
 # var
@@ -297,6 +297,7 @@ def dfs(start, end, draw, path_1, grid):
             for row in grid:
                 for node in row:
                     node.previous = None
+                    node.maze_visited = False
             dfs(start, end, draw, path_1, grid)
             break
         elif current == end[0] and len(end) == 1:
@@ -325,6 +326,7 @@ def bfs(start, end, draw, path_1, grid):
     for row in grid:
         for node in row:
             node.update_neighbors(grid)
+            node.maze_visited = False
     # variables
     open_set = [start]
     path = path_1
@@ -528,6 +530,83 @@ def a_star(start, end, draw, path_1, grid):
                 temp = temp.previous
             path.extend(temp_path)
             for i in range(2, len(path)):
+                if path[i].color != Orange and path[i].color != Turquoise:
+                    path[i].set_color(Purple)
+                elif path[i].color == Turquoise:
+                    path[i].set_color(Grown)
+                draw()
+            algorithm = False
+        draw()
+
+
+def gbfs(start, end, draw, path_1, grid):
+    # update heuristic and neighbors
+    for row in grid:
+        for node in row:
+            node.update_neighbors(grid)
+            node.h = heuristic(node, end[0])
+
+    # variables
+    open_set = [start]
+    count = 0
+    open_set_prio = PriorityQueue()
+    open_set_prio.put((0, count, start))
+    path = path_1
+    algorithm = True
+
+    while algorithm:
+        clock.tick(1000)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+        if open_set_prio.empty():
+            break
+        current = open_set_prio.get()[2]
+        open_set.remove(current)
+
+        for neighbor in current.get_neighbors():
+            if neighbor.color == Yellow or neighbor.color == Pink:
+                neighbor.f = neighbor.h + 10
+            else:
+                neighbor.f = neighbor.h
+            if neighbor not in open_set and neighbor.color != Red and neighbor.color != Green and neighbor != start:
+                neighbor.previous = current
+                count += 1
+                open_set_prio.put((neighbor.f, count, neighbor))
+                open_set.append(neighbor)
+                if neighbor.color != Orange and neighbor.color != Yellow and neighbor.color != Turquoise and neighbor.color != Pink:
+                    neighbor.set_color(Green)
+                elif neighbor.color == Yellow:
+                    neighbor.set_color(Pink)
+
+        if current.color != Orange and current.color != Turquoise and current.color != Pink:
+            current.set_color(Red)
+
+        if current == end[0] and len(end) > 1:
+            start = end[0]
+            end.pop(0)
+            temp = current
+            path.append(current)
+            while temp.previous:
+                path.append(temp)
+                temp = temp.previous
+            for row in grid:
+                for node in row:
+                    node.g = math.inf
+                    node.h = math.inf
+                    node.previous = None
+            gbfs(start, end, draw, path, grid)
+            break
+        elif current == end[0] and len(end) == 1:
+            end.pop(0)
+            temp = current
+            temp_path = [current]
+            while temp.previous:
+                temp_path.append(temp)
+                temp = temp.previous
+            path.extend(temp_path)
+            for i in range(len(path)):
                 if path[i].color != Orange and path[i].color != Turquoise:
                     path[i].set_color(Purple)
                 elif path[i].color == Turquoise:
