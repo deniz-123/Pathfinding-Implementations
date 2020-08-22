@@ -25,7 +25,12 @@ Now user can create maze with Prim's by clickin p button.
 # Version : 1.0.4
 Optimization and bug fixes for maze creation algorithms
 
-# Date: 8/21/2020
-# Version: 1.0.5
+# Date : 8/21/2020
+# Version : 1.0.5
 Optimized the files and code
 Added depth first search and breadth-first search algorithms
+
+# Date: 8/22/2020
+# Version : 1.0.6
+Fixed bugs for dfs and bfs while finding a path for maze
+Added Greedy Best First Search algorithm
