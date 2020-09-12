@@ -34,3 +34,8 @@ Added depth first search and breadth-first search algorithms
 # Version : 1.0.6
 Fixed bugs for dfs and bfs while finding a path for maze
 Added Greedy Best First Search algorithm
+
+# Date : 9/12/2020
+# Version : 1.0.6
+Fixed bugs for gbfs
+Added Hunt and Kill and Kruskal's algorithms for maze creation
