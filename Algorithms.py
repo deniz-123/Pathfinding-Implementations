@@ -85,6 +85,171 @@ def rand_obstacle(grid, draw):
     draw()
 
 
+def maze_kruskals(grid, draw):
+    # variables
+    cell = []
+    stack = []
+    kruskal_no = 1
+
+    for row in grid:
+        for node in row:
+            node.update_neighbors(grid)
+
+    for i in range(round(T_ROWS)):
+        for j in range(round(T_COLS)):
+            if i == 0 or i == T_ROWS - 1:
+                grid[i][j].set_color(Black)
+            elif j == 0 or j == T_COLS - 1:
+                grid[i][j].set_color(Black)
+            elif i % 2 == 0:
+                grid[i][j].set_color(Black)
+            elif j % 2 == 0:
+                grid[i][j].set_color(Black)
+            else:
+                grid[i][j].set_color(Black)
+                grid[i][j].visited_cell = False
+                grid[i][j].kruskal = kruskal_no
+                cell.append(grid[i][j])
+                kruskal_no += 1
+        draw()
+    for row in grid:
+        for node in row:
+            node.update_maze_neighbors(grid)
+            node.kruskal_neighbors = node.maze_neighbors
+    random.shuffle(cell)
+    current = cell[0]
+    number = current.kruskal
+    algorithm = True
+    count = 0
+    while algorithm:
+
+        loop2 = True
+        algorithm = False
+        for item in cell:
+            item.update_kruskal_neighbors
+            if len(item.kruskal_neighbors) == 0:
+                cell.remove(item)
+            if item.kruskal != number:
+                algorithm = True
+        if not algorithm:
+            break
+
+        maze_neighbors_tmp = current.get_maze_neighbors()
+        random.shuffle(maze_neighbors_tmp)
+        chosen = maze_neighbors_tmp[0]
+
+        if current.kruskal != chosen.kruskal:
+            for neighbor in current.get_neighbors():
+                if neighbor in chosen.get_neighbors():
+                    current.set_color(White)
+                    chosen.set_color(White)
+                    tmp_kruskal = chosen.kruskal
+                    chosen.kruskal = current.kruskal
+                    neighbor.set_color(White)
+
+        for node in cell:
+            if node.kruskal == tmp_kruskal:
+                node.kruskal = chosen.kruskal
+
+        random.shuffle(cell)
+        number = current.kruskal
+        if cell:
+            current = cell[0]
+        else:
+            algorithm = False
+        draw()
+
+
+def hunt_kill(grid, draw):
+    # variables
+    cell = []
+    stack = []
+
+    for row in grid:
+        for node in row:
+            node.update_neighbors(grid)
+
+    for i in range(round(T_ROWS)):
+        for j in range(round(T_COLS)):
+            if i == 0 or i == T_ROWS - 1:
+                grid[i][j].set_color(Black)
+            elif j == 0 or j == T_COLS - 1:
+                grid[i][j].set_color(Black)
+            elif i % 2 == 0:
+                grid[i][j].set_color(Black)
+            elif j % 2 == 0:
+                grid[i][j].set_color(Black)
+            else:
+                grid[i][j].set_color(Black)
+                grid[i][j].visited_cell = False
+                cell.append(grid[i][j])
+        draw()
+    for row in grid:
+        for node in row:
+            node.update_maze_neighbors(grid)
+
+    random.shuffle(cell)
+    current = cell[0]
+    stack.append(current)
+
+    while stack:
+        clock.tick(222222)
+        for row in grid:
+            for node in row:
+                node.update_maze_neighbors(grid)
+
+        current = current
+        stack.remove(current)
+        current.visited_cell = True
+        current.set_color(White)
+        random.shuffle(current.get_maze_neighbors())
+        maze_neighbors_tmp = current.get_maze_neighbors()
+
+        if maze_neighbors_tmp:
+            if len(maze_neighbors_tmp) > 1:
+                i = random.randint(0, len(current.get_maze_neighbors()) - 1)
+                chosen = current.get_maze_neighbors()[i]
+                stack.append(chosen)
+            elif len(maze_neighbors_tmp) == 1:
+                chosen = maze_neighbors_tmp[0]
+                stack.append(chosen)
+
+            for neighbor in current.get_neighbors():
+                if neighbor in chosen.get_neighbors():
+                    neighbor.set_color(White)
+                    break
+            current = chosen
+        else:
+            i = 1
+            j = 1
+            while True:
+                if grid[i][j].visited_cell and grid[i][j].get_maze_neighbors():
+                    current = grid[i][j]
+                    if current.color != White:
+                        current.set_color(Green)
+                    stack.append(current)
+                    break
+                if i == T_ROWS - 2:
+                    """if grid[i - 2][j].color != White:
+                        grid[int(T_ROWS -2)][j].set_color(Black)"""
+                    j += 2
+                    i = 1
+                    """if grid[i][j].color == Black and grid[i][j].color != White:
+                        grid[i][j].set_color(Green)
+                    if grid[i - 2][j - 2].color != White:
+                        grid[i][j].set_color(Black)"""
+                elif i != T_ROWS - 2 and j != T_COLS - 2:
+                    i += 2
+                    """if grid[i][j].color == Black and grid[i][j].color != White:
+                        grid[i][j].set_color(Green)
+                    if grid[i - 2][j].color != White:
+                        grid[i - 2][j].set_color(Black)"""
+                else:
+                    break
+                #draw()
+        draw()
+
+
 def maze_prims(grid, draw):
     # variables
     cell = []
@@ -215,7 +380,7 @@ def maze_recursive(grid, draw):
     current.visited_cell = True
 
     while cell:
-        clock.tick(20000000)
+        clock.tick(15)
         for row in grid:
             for node in row:
                 node.update_maze_neighbors(grid)
@@ -570,7 +735,7 @@ def gbfs(start, end, draw, path_1, grid):
                 neighbor.f = neighbor.h + 10
             else:
                 neighbor.f = neighbor.h
-            if neighbor not in open_set and neighbor.color != Red and neighbor.color != Green and neighbor != start:
+            if neighbor not in open_set and neighbor.color != Red and neighbor != start: # and neighbor.color != Green and neighbor != start:
                 neighbor.previous = current
                 count += 1
                 open_set_prio.put((neighbor.f, count, neighbor))
@@ -593,7 +758,6 @@ def gbfs(start, end, draw, path_1, grid):
                 temp = temp.previous
             for row in grid:
                 for node in row:
-                    node.g = math.inf
                     node.h = math.inf
                     node.previous = None
             gbfs(start, end, draw, path, grid)
